@@ -1,0 +1,23 @@
+<html>
+<head>
+</head>
+<body>
+	
+	<textarea id="ta_code">
+
+	</textarea>
+	<button onclick = "_compile()"> compile </button>
+	<pre id = "result"></pre>
+
+</body>
+
+<script src = "compiler.js"></script>
+<script>
+	var ta_code = document.getElementById('ta_code');
+	var display = document.getElementById('result');
+	function _compile(){
+		compiler(ta_code.value);
+	}
+</script>
+
+</html>
