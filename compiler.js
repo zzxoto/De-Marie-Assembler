@@ -1,6 +1,7 @@
-var compiled = [ ['add' , 10] , ['sub', 10] , ['add', 15] , ['mul', 30]];
 
-//TODO after error print to errorBOX and wait for user to restart
+//need to keep track of lines
+
+
 function compiler( blob ){
 	//@param string that we extracted from the html text area
 
@@ -48,7 +49,7 @@ function compiler( blob ){
 
 		dollar_state: -1,// when variable --> 0, when data--> 1
 		instruction_state_A: -1,//instruction that resolves in 2 parts		add -> 0   $var -> 1
-		instruction_state_B: -1,//instruction that resolves in 1 part ( eg:output )  output -> 1
+		instruction_state_B: -1,//instruction that resolves in 1 part ( eg:output )  output -> 0
 		A: ['add' , 'sub' , 'mul' , 'div'],
 		B: ['output'],
 		validate: function( rawCommands ){
@@ -72,14 +73,17 @@ function compiler( blob ){
 				}
 			})
 
+			//incomplete state of machine such as ['add'] ['$a' , 'dec']
+			if (this.dollar_state == 0 || this.dollar_state == 100 || this.instruction_state_A == 0)
+				this.abort();
 			this.resetFlags();
 		}
 		,
 		dollar_validator: function( x ){
-			//test the validity of the variable
-			//one cannot have instruction and variable in same line ... also assigning varaiable takes atMost 2 commands
+			//test the validity of the label
+			// assigning labels take either 2 or 3 commands i.e. $a add $b || $a output
 
-			if ( this.dollar_state == 1)
+			if ( this.dollar_state == 2)
 				this.abort()
 			else if ( this.dollar_state == -1){//checks validity of variable name
 				if ( x.length > 1)//guard against'$' or '$ 123'
@@ -88,10 +92,28 @@ function compiler( blob ){
 					this.abort()
 			}
 			else if ( this.dollar_state == 0){//checks validity of assigned integer
-				if ( reg_nonDigit.test( x ) )//only digits allowed
-					this.abort()
-				this.dollar_state = 1;
+				if (this.A.indexOf(x) != -1 ||  this.B.indexOf(x) != -1){//$a add $b
+					this.instruction_validator( x )
+					this.dollar_state = 10;
+				}
+				else if (x == 'dec')
+					this.dollar_state = 100
+				else
+					this.abort();
 			}
+			else if ( this.dollar_state == 10){
+				this.instruction_validator( x )
+				this.dollar_state = 2;
+			}
+
+			else if (this.dollar_state == 100){
+				if ( reg_nonDigit.test( x ) )//expected pure integer
+					this.abort();
+				else
+					this.dollar_state = 2;
+			}
+
+
 		},
 		instruction_validator: function( x ){
 			if ( this.instruction_state_B == 0 || this.instruction_state_A == 1 )

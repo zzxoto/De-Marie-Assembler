@@ -1,6 +1,9 @@
+//need a program counter
+
 function CPU( compiled_code = ''){
 	var AC = 0;
 	var arch = 16;
+	var runtimeVar =  {};
 
 	var ALU = {
 		maxPos : 32767, //2^15 -1
@@ -71,7 +74,7 @@ function CPU( compiled_code = ''){
 		}
 };	
 	var CU = {
-		runtimeVar: { },
+		,
 		fetch: function*(){
 
 			for ( var i= 0; i < compiled_code.length ; i++){
@@ -79,9 +82,9 @@ function CPU( compiled_code = ''){
 				if ( x[0][0] === '$'){
 					var namespace = x[0];
 					if(!x[1])
-						this.runtimeVar[namespace] = 0;//uninitialized variables are set to 0
+						runtimeVar[namespace] = 'N/A';//uninitialized variables are set to 'N/A'
 					else	
-						this.runtimeVar[namespace] = x[1];
+						runtimeVar[namespace] = x[1];
 				}
 				else{
 					yield x;
@@ -89,35 +92,63 @@ function CPU( compiled_code = ''){
 			}
 		},
 
-		decode: function( ins ){
-			var instruction = ['add', 'sub', 'mul' , 'div' ,'output'];
-			var ops = [0 , 1, 2, 3, 4];	
-			var opcode,
-				data;
+		decoder:{ 
+			A: ['add' , 'sub' , 'mul' , 'div'],
+			B:['output'],
+			C:['load' , 'store']
 
-			for (var i = 0; i < instruction.length ; i ++){
-				if ( ins[0] === instruction[i]){
-					opcode = ops[i];
-				}
+			decodeA: function( ins , data ){//decodes instructions that require 2nd arguments
+				var opcode,
+					data;
+
+				opcode = this.A.indexOf( ins );//ranges -> [0,3]
+				data = parseInt( runtimeVar[ data ] );//beware some values may be NaN, e.g. output
+
+				if ( isNaN(data) )
+					throw 'uninitialized runtime variable while decoding';
+
+				return [opcode , data];
+			},
+
+			decodeB: function( ins , data ){//decodes instruction that doesnot require second argument
+				var opcode;
+				opcode = this.B.indexOf( ins ) + this.A.length//ranges -> [4]
+
+				if ( data )
+					throw 'illegal argument while decoding';
+
+				return [opcode, null];
+			},
+
+			decodeC: function( ins, data){
+				var opcode;
+				opcode = this.C.indexOf( ins ) + this.B.length + this.A.length;
+
+			},
+
+			decode: function( ins ){
+				var opc = ins[0];
+				var data = ins[1];
+				if (this.A.indexOf(opc) != -1)
+					return this.decodeA( opc , data );
+				else if (this.B.indexOf(opc) != -1)
+					return this.decodeB( opc , data );
+				else
+					throw "opcode missing while decoding";
 			}
-			data = parseInt( this.runtimeVar[ins[1]] );//beware some values may be NaN, e.g. output
-
-			if ( opcode == null ){
-				throw 'opcode missing while decoding'
-			}
-
-			return [opcode , data];
 		},
 
 		execute: function(){
 			var fetch_gen = this.fetch();
+
+			
 			
 			while (true){
 				var f = fetch_gen.next();
 				if (f.done)
 					break;
 				else{
-					var x = this.decode( f.value ),
+					var x = this.decoder.decode( f.value ),
 					opc = x[0],
 					data = x[1];
 						
