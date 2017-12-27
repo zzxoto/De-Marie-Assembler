@@ -1,23 +1,227 @@
 <html>
 <head>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<style>
+
+	textarea {
+		border: none;
+		background-color: #eff0f1;
+		resize: none;
+		outline: none;
+		overflow: hidden
+	}
+	.well{
+		background-color: white;
+		background-image: none;
+	}
+	.btn:focus{
+		color: white;
+	}
+	.btn:hover{
+		color:#333;
+	}
+	.btn-group{
+		#333333;
+	}
+	
+	#compile-button{
+		background-color: #565656;
+		color: white;
+	}
+	
+
+</style>
+
 </head>
 <body>
-	
-	<textarea id="ta_code">
 
-	</textarea>
-	<button onclick = "_compile()"> compile </button>
-	<pre id = "result"></pre>
+<div class="container">
 
+<div class="page-header">
+	<h1>De-Marie</h1>
+</div>
+
+</div>
+
+<div class = "container" style = "margin-bottom: 20px;">
+	<div class="btn-group btn-group-md" role="group">
+		<button id = "docs-b"type="button" class="btn btn-default">Docs</button>
+		<button id = "codeSandbox-b"type="button" class="btn btn-default">Code Sandbox</button>
+	</div>
+</div>
+
+
+<div class="container" id ="codeSandbox">
+	<div class = "row">
+		<div class="well col-xs-10  col-sm-6 col-md-5 col-lg-4 col-lg-offset-0 col-md-offset-1 col-sm-offset-0 col-xs-offset-1">
+			<textarea id ="textArea-index" cols="3" rows ="20"  spellcheck="false" style="background-color: #565656; color: white;" readonly tabindex="-1"></textarea>
+			<textarea id="textArea-code" cols = "35" rows ="20"  spellcheck="false" placeholder="Your code here" tabindex="-1"></textarea>
+		</div>
+		<div class="well col-xs-10 col-sm-6 col-md-5 col-lg-4 col-sm-offset-0 col-xs-offset-1">
+			<div class = "row">
+				<div class ="col-sm-12">
+					<textarea id="stdOut" , rows = "10" cols="50"  spellcheck="false" readonly> </textarea>
+				</div>
+				<div class ="col-sm-12" style = "margin-top: 20px;"> 
+					<button class = "btn" id="compile-button" role = "button"> Compile & Run </button>
+				</div>		
+			</div>
+		</div>
+	</div>
+ </div>
+ 
+ 
+ <div class = "container"id="docs" style = "display: none"> 
+	<div class = "row">
+		<div class = "col-lg-8 col-md-10  col-lg-offset-2 col-md-offset-1">
+			<h4><a href="#col1" data-toggle="collapse">What is De-Marie</a></h4>
+			<div class="collapse in" id="col1">
+				<p>It is an attempt to create a rough and primitive copy of the famous Marie assembler. 
+				   Currently it support add, sub, mul, div, load, store, doIf,  output and jump operations.
+				   With Jump and doIf only the sky is the limit but I have to say the limit is 16 bit architecture. So,
+				   no decimals and no big integers.
+				   Getting Started Section is meant for every range of programmers. Note for beginners, I have made constantly made use of
+				   phrase "memory address" because it is important to get that concept right. 
+				</p>
+			</div>
+		</div>
+				
+		<div class = "col-lg-8 col-md-10  col-lg-offset-2 col-md-offset-1">
+			<h4><a href="#col2" data-toggle="collapse">In what way it differs from Marie?</a></h4>
+			<div class="collapse" id="col2">
+				<p>Somehow funny to compare with Marie I suppose, but then again....</p>
+				<p>Apart from obvious, in De-Marie, labels/Variables are always done through prefix '$' symbol.
+				   But just writing $abc would throw and error. One muse explicity say '$abc dec 10' to assign
+				   the memory address with value 10. '$..' if placed before operations, stores the value of program counter,
+				   starting from 1 to the location where you placed.(Better explained in Getting Started Section).
+				   An illustration:				   
+				   <pre>
+		$abc dec 10
+		$addr add $abc	//$addr stores value 2. since PC would be 2 at this point
+		load $addr
+		$output		//2
+				   </pre>
+				   <p>doIf is I think an improvement over skipCond. Reverse to what skipCond did, doIf executes the following statement 
+					if the condition is met. i.e. 0 for equality, 1 for less than, 2 for greater than
+					<pre>
+		$eq dec 0
+		$abc dec 2
+		load $abc	//AC = 2
+		doIf $eq	//if ( AC == 0)//which is false duh..
+		jump $abc	//infinite loop averted
+					</pre>
+				   </p>
+				</p>
+			</div>
+		</div>
+		
+		
+		<div class = "col-lg-8 col-md-10  col-lg-offset-2 col-md-offset-1">
+			<h4><a href="#col3" data-toggle="collapse">Getting Started</a></h4>
+			<div class="collapse" id="col3">
+			
+				<h5><a href="#assembly-overview" data-toggle="collapse">(Click)Assembly Language Overview</a></h5>
+				<div id="assembly-overview" class = "collapse">
+					<p>AC is the general purpose register( fast accessible temporary space) that is available to ALU to do calculations.
+					   Abstracting some details, when we perform addition, say 'add $abc', what CPU does is gets hold of the address $abc and saves it in some 
+						another register; sends to ALU; ALU performs AC += AC + (data stored in address $abc).
+					</p>
+					<p>So any time we want to perform any opertaion, the AC becomes a kind of middleMan. So, always keep AC in mind while programming it.
+					So, adding two numbers require storing first number to AC (done via load $abc ) then adding second number (done via add $abc ).
+					</p>
+				</div>
+				<p></p>
+				<h5>Basics</h5>
+				<pre>
+		$abc				refers to the address in memory(NOTE $abc would throw an error. Assignment is necessary)
+		$abc dec 10			stores value 10 to the memory address refered by 10
+		
+		add $abc			AC = AC + value stored in memory address refered by $abc
+		sub $abc			AC = AC - value stored in memory address refered by $abc
+		mul $abc			AC = AC * value stored in memory address refered by $abc
+		div $abc			AC = AC / value stored in memory address refered by $abc
+
+		load $abc			Takes the value from $abc and loads it into AC
+		store $abc			Store the value of AC into the memory address referred by $abc
+		
+		output				Displays the value stored in AC
+				</pre>
+				<h5>Slightly Tricky</h5>
+				<h5>How jump Statement Works</h5>
+				<p>CPU performs sequential execution with help of Program Counter(PC) that helps to keep track of 'what command to perform next'.
+					After each execution, program counter increases by 1. Jump $asd allows us to arbitrarily(but with in the sope of program)
+					'set' the PC(PC = PC + (value stored in $asd)), so upon next execution, CPU performs execution accordingly..
+				 </p>
+				<pre>
+		$eq dec 0
+		$sm dec 1
+		$lg dec 2
+		$X dec 1		
+		
+		doIf $eq		//jump is executed if AC == 0
+		jump $X			//jump gets executed and PC is set to 1. (THIS CAUSES INFINITE LOOP)
+		
+		doIf $sm		//jump is executed if AC < 0
+		jump $X
+				
+		doIf $lg		//jump is executed if AC > 0
+		jump $X 
+				</pre>
+			</div>
+		</div>
+		
+		<div class = "col-lg-8 col-md-10  col-lg-offset-2 col-md-offset-1">
+			<h4><a href="#col4" data-toggle="collapse">Some Examples</a></h4>
+			<div class="collapse" id="col4">
+				<div>
+					<p> ADD two numbers and store it in third variable and display that variable</p>
+					<pre>
+		$num1 dec 15
+		$num2 dec 20
+		$X dec 0
+		
+		load $num1
+		add $num2
+		store $X
+		
+		load $X
+		output
+					</pre>
+				</div>
+			</div>
+			
+		</div>
+		
+	</div>
+ </div>
+ 
+
+
+ 
 </body>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script src = "textEditor.js"></script>
 <script src = "compiler.js"></script>
+<script src = "cpu.js"></script>
 <script>
-	var ta_code = document.getElementById('ta_code');
-	var display = document.getElementById('result');
-	function _compile(){
-		compiler(ta_code.value);
-	}
+	var docs = document.getElementById('docs'),
+		codeSandbox = document.getElementById('codeSandbox');
+	
+	document.getElementById('docs-b').addEventListener('click' , function(){
+		docs.style.display = 'block';
+		codeSandbox.style.display = 'none';
+	})
+	
+	document.getElementById('codeSandbox-b').addEventListener('click' , function(){
+		docs.style.display = 'none';
+		codeSandbox.style.display = 'block';
+	})
+	
 </script>
 
 </html>
