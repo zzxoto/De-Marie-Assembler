@@ -4,7 +4,7 @@
   "description": "the assembler",
   "main": "server.js",
   "scripts": {
-    "test": "'",
+    "test": "",
     "start": "node server.js"
   },
   "author": "Abhaya",
